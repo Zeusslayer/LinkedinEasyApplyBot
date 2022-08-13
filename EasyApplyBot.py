@@ -21,8 +21,7 @@ class Linkedin:
         ffOptions.add_argument(data.FFPATH)
         self.driver = Firefox(service=service, options=ffOptions)
 
-        #self.driver.maximize_window()  # For maximizing window
-        self.driver.implicitly_wait(10)  # gives an implicit wait for 10 seconds
+        # self.driver.maximize_window()  # For maximizing window
         self.driver.get(
             "https://www.linkedin.com/feed/"
         )  # opens the linkedin feed page
@@ -32,31 +31,42 @@ class Linkedin:
         count_job = 0
         jobs_per_page = 25
         easy_apply = "?f_AL=true"
-        location = "European%20Union"  # "Worldwide" - European%20Union - Norway - Istanbul - United%20States
+        location = "Germany"  # "Worldwide" - European%20Union - United%20States - Norway - Istanbul - United%20States
         keywords = ["QA", "Test Engineer", "Test Automation"]
         # in the last x seconds | day = 86400, week = 604800, month = 2592000
         date_posted = "604800"
-        for indexpag in range(len(keywords)):
-            self.driver.get(
+        self.driver.implicitly_wait(10)  # gives an implicit wait for 10 seconds
+        for indexpag in range(len(keywords)):  # loops through the keywords
+            self.driver.get(  # opens the linkedin job search page using parameters below # https://www.linkedin.com/jobs/search/?f_AL=true&f_TPR=r604800&keywords=QA&location=United%20States
                 "https://www.linkedin.com/jobs/search/"
-                + easy_apply
+                + easy_apply  # easy apply
                 + "&f_TPR=r"
-                + date_posted
+                + date_posted  # in the last x seconds
                 + "&keywords="
-                + keywords[indexpag]
+                + keywords[indexpag]  # keywords
                 + "&location="
-                + location
+                + location  # location
             )
             numofjobs = self.driver.find_element(
-                "xpath", "//small"
+                "xpath", "//*[@id='main']/div/section[1]/header/div[1]/small"
             ).text  # get number of results
 
-            space_ind = numofjobs.index(" ")
-            total_jobs = numofjobs[0:space_ind]
-            total_jobs_int = int(total_jobs.replace(",", ""))
-            number_of_pages = math.ceil(total_jobs_int / jobs_per_page)
-            print(number_of_pages)
-            for i in range(number_of_pages):
+            space_ind = numofjobs.index(
+                " "
+            )  # get index of space between | number and word "results" |
+            total_jobs = numofjobs[0:space_ind]  # get "number" of results
+            total_jobs_int = int(
+                total_jobs.replace(",", "")
+            )  # convert "number" to integer
+            print("Number of Results: " + str(total_jobs_int))  # print total jobs
+            number_of_pages = math.ceil(
+                total_jobs_int / jobs_per_page
+            )  # calculate number of pages
+            print("Number of Pages: ", number_of_pages)  # print number of pages
+
+            for i in range(
+                number_of_pages
+            ):  # cycles through pages and runs the below code for each page
                 cons_page_mult = 25 * i
                 url = (
                     "https://www.linkedin.com/jobs/search/"
@@ -70,23 +80,29 @@ class Linkedin:
                     + "&start="
                     + str(cons_page_mult)
                 )
-                self.driver.get(url)
+                self.driver.get(url)  # get url of each page page of results
                 time.sleep(10)
-                links = self.driver.find_elements(
+                # needs to be scrolled down to get all the jobs on the page, couldn't write the code yet. Workaround is to set the default zoom of the browser to lowest.
+                links = self.driver.find_elements(  # finds all job elements on the page by their job id
                     "xpath", "//div[@data-job-id]"
-                )  # needs to be scrolled down
+                )
+                print(
+                    "Number of Job Elements: " + str(len(links))
+                )  # print number job elements
+
                 IDs = []
-                for link in links:
+                for link in links:  # get job id for each job element
                     temp = link.get_attribute("data-job-id")
                     jobID = temp.split(":")[-1]
                     IDs.append(int(jobID))
                 IDs = set(IDs)
                 jobIDs = [x for x in IDs]
-                for jobID in jobIDs:
-                    job_page = "https://www.linkedin.com/jobs/view/" + str(jobID)
-                    self.driver.get(job_page)
+
+                for jobID in jobIDs:  # loop through job ids and apply to each job
+                    job_page = f"https://www.linkedin.com/jobs/view/{jobID}"
+                    self.driver.get(job_page)  # get specific job page
                     count_job += 1
-                    time.sleep(20)
+                    time.sleep(10)
                     try:
                         button = self.driver.find_elements(
                             "xpath", '//button[contains(@class, "jobs-apply")]/span[1]'
