@@ -11,24 +11,25 @@ from webdriver_manager.firefox import GeckoDriverManager
 from xml.dom.minidom import Element
 import time
 import math
-import data
+import userData
 import logging
 
 logging.basicConfig(  # Set up logging
     filename="EasyApplyBot.log",
     level=logging.INFO,
-    format="%(levelname)s :: %(asctime)s :: %(message)s",
-    datefmt="%Y/%m/%d %H:%M:%S",
+    format="%(levelname)s | %(asctime)s | %(message)s",
+    datefmt="%m/%d %H:%M:%S",
 )
 
 
 class Linkedin:
     def __init__(self):
-        service = FirefoxService(executable_path=GeckoDriverManager().install())
+        service = FirefoxService(
+            executable_path=GeckoDriverManager().install())
 
         ffOptions = Options()
         ffOptions.add_argument("-profile")
-        ffOptions.add_argument(data.FFPATH)
+        ffOptions.add_argument(userData.FFPATH)
         self.driver = Firefox(service=service, options=ffOptions)
 
         # self.driver.maximize_window()  # For maximizing window
@@ -37,28 +38,24 @@ class Linkedin:
         )  # opens the linkedin feed page
 
     def Link_job_apply(self):
-        # in the last x seconds | day = 86400, week = 604800, month = 2592000
-        date_posted = "86400"
-        location = "European%20Union"  # "Worldwide" - European%20Union - United%20States - Norway - Istanbul - United%20States
-        keywords = ["QA", "Test Engineer", "Test Automation"]
 
         count_application = 0
         count_job = 0
         jobs_per_page = 25
-        easy_apply = "?f_AL=true"
 
-        self.driver.implicitly_wait(10)  # gives an implicit wait for 10 seconds
-        for indexpag in range(len(keywords)):  # loops through the keywords
-            self.driver.get(  # opens the linkedin job search page using parameters below # https://www.linkedin.com/jobs/search/?f_AL=true&f_TPR=r604800&keywords=QA&location=United%20States
-                "https://www.linkedin.com/jobs/search/"
-                + easy_apply  # easy apply
-                + "&f_TPR=r"
-                + date_posted  # in the last x seconds
-                + "&keywords="
-                + keywords[indexpag]  # keywords
-                + "&location="
-                + location  # location
+        # gives an implicit wait for 10 seconds
+        self.driver.implicitly_wait(10)
+
+        # that's where the magic begins
+        for indexpag in range(len(userData.keywords)):  # loops through the keywords
+
+            # url that contains the combinations of all the user input above
+            url = (
+                f"https://www.linkedin.com/jobs/search/{userData.easy_apply}&f_TPR=r{userData.date_posted}"
+                f"{userData.remote}&keywords={userData.keywords[indexpag]}&location={userData.location}"
             )
+            # opens the linkedin job search page # https://www.linkedin.com/jobs/search/?f_AL=true&f_TPR=r604800&keywords=QA&location=United%20States
+            self.driver.get(url)
             numofjobs = self.driver.find_element(
                 "xpath", "//*[@id='main']/div/section[1]/header/div[1]/small"
             ).text  # get number of results
@@ -76,23 +73,16 @@ class Linkedin:
             number_of_pages = math.ceil(
                 total_jobs_int / jobs_per_page
             )  # calculate number of pages
-            logging.info(f"Number of Pages: {number_of_pages}")  # print number of pages
+            # print number of pages
+            logging.info(f"Number of Pages: {number_of_pages}")
 
             for i in range(
                 number_of_pages
             ):  # cycles through pages and runs the below code for each page
                 cons_page_mult = 25 * i
                 url = (
-                    "https://www.linkedin.com/jobs/search/"
-                    + easy_apply
-                    + "&f_TPR=r"
-                    + date_posted
-                    + "&keywords="
-                    + keywords[indexpag]
-                    + "&location="
-                    + location
-                    + "&start="
-                    + str(cons_page_mult)
+                    f"https://www.linkedin.com/jobs/search/{userData.easy_apply}&f_TPR=r{userData.date_posted}"
+                    f"{userData.remote}&keywords={userData.keywords[indexpag]}&location={userData.location}&start={str(cons_page_mult)}"
                 )
                 self.driver.get(url)  # get url of each page page of results
                 time.sleep(5)  # wait 10 seconds
@@ -118,53 +108,49 @@ class Linkedin:
                     count_job += 1
                     logging.info(f"Job number: {count_job}")
 
-                    wait = WebDriverWait(self.driver, 15)
-
-                    button = wait.until(
-                        EC.presence_of_all_elements_located(
-                            (
-                                By.XPATH,
-                                "//button[contains(@class, 'jobs-apply')]/span[1]",
-                            )
-                        )
-                    )
-                    logging.warning("Breakpoint 2")
-                    logging.warning(f"Button[0]: {button[0]}")
-
-                    logging.warning(f"Button[0].text: {button[0].text}")
-                    logging.warning(f"Button: {button}")
-                    # try:
-                    #     print("Breakpoint 1")
-                    #     # button = self.driver.find_element(
-                    #     #        (By.XPATH, "//button[contains(@class, 'jobs-apply')]/span[1]") )
-                    #     # wait.until(
-                    #     # EC.presence_of_element_located (
-
-                    #     # buttonText = wait.until(
-                    #     #     EC. (
-
-                    #     if button[0].text in "Easy Apply":
-                    #         EasyApplyButton = button[0]
-
-                    #     print("Breakpoint 3")
-
-                    # except:
-                    #     EasyApplyButton = False
-
-                    # time.sleep(15)
-                    # try:
-                    #     button = self.driver.find_elements(
-                    #         "xpath", '//button[contains(@class, "jobs-apply")]/span[1]'
+                    # WORKING ON IT ------------------------------------------------
+                    # wait = WebDriverWait(self.driver, 15)
+                    # logging.warning("Breakpoint | 1")
+                    # button = wait.until(
+                    #     EC.presence_of_all_elements_located(
+                    #         (
+                    #             By.XPATH,
+                    #             "//button[contains(@class, 'jobs-apply')]/span[1]",
+                    #         )
                     #     )
-                    #     if button[0].text in "Easy Apply":
-                    #         EasyApplyButton = button[0]
-                    # except:
-                    #     EasyApplyButton = False
+                    # )
+                    # logging.warning("Breakpoint | 2")
+                    # wait.until(EC.element_to_be_selected(button[0]))
+                    # logging.warning("Breakpoint | 3")
 
+                    # if button[0].text in "Easy Apply":
+                    #     EasyApplyButton = button[0]
+                    #     logging.warning("Breakpoint | 4")
+
+                    # else:
+                    #     EasyApplyButton = False
+                    #     logging.warning("Breakpoint | 5")
+
+                    # button = EasyApplyButton
+                    # logging.warning("Breakpoint | 6")
+                    # -----------------------------------------------------------------
+
+                    # ORIGINAL-ISH ---------------------------------------------------------
+                    time.sleep(15)
+                    try:
+                        button = self.driver.find_elements(
+                            "xpath", '//button[contains(@class, "jobs-apply")]/span[1]'
+                        )
+                        if button[0].text in "Easy Apply":
+                            EasyApplyButton = button[0]
+                    except:
+                        EasyApplyButton = False
                     button = EasyApplyButton
+                    # --------------------------------------------------------
+
                     if button is not False:
                         button.click()
-                        time.sleep(2)
+                        time.sleep(3)
                         try:
                             self.driver.find_element(
                                 By.CSS_SELECTOR,
@@ -184,7 +170,8 @@ class Linkedin:
                                     "xpath",
                                     "/html/body/div[3]/div/div/div[2]/div/div/span",
                                 ).text
-                                percen_numer = int(percen[0 : percen.index("%")])
+                                percen_numer = int(
+                                    percen[0: percen.index("%")])
                                 if int(percen_numer) < 25:
                                     print(
                                         "*More than 5 pages,wont apply to this job! Link: "
@@ -224,12 +211,12 @@ class Linkedin:
                                             By.CSS_SELECTOR,
                                             "button[aria-label='Continue to next step']",
                                         ).click()
-                                        time.sleep(7)
+                                        time.sleep(3)
                                         self.driver.find_element(
                                             By.CSS_SELECTOR,
                                             "button[aria-label='Review your application']",
                                         ).click()
-                                        time.sleep(7)
+                                        time.sleep(3)
                                         self.driver.find_element(
                                             By.CSS_SELECTOR,
                                             "button[aria-label='Submit application']",
@@ -247,7 +234,7 @@ class Linkedin:
                                             By.CSS_SELECTOR,
                                             "button[aria-label='Review your application']",
                                         ).click()
-                                        time.sleep(7)
+                                        time.sleep(3)
                                         self.driver.find_element(
                                             By.CSS_SELECTOR,
                                             "button[aria-label='Submit application']",
@@ -265,10 +252,10 @@ class Linkedin:
                         print(
                             "* Already applied! ---------------------------------------------"
                         )
-                    time.sleep(2)
+                    time.sleep(3)
             print(
                 "Category: ",
-                keywords,
+                userData.keywords,
                 " ,applied: "
                 + str(count_application)
                 + " jobs out of "

@@ -28,8 +28,8 @@ This tutorial briefly explains how to setup LinkedIn Easy Apply jobs bot. With f
 5)	Create a profile on Firefox, about:profiles
 6)	Launch new profile, go Linkedin.com and log in your account
 7)	Copy the root folder of your new profile, to do that type about:profiles on your Firefox search bar, copy the root folder C:\---\your-profile-name.
-8)	Paste the root folder on "data.FFPATH" variable or create a data.py file and then assing your root to FFPATH
-9)	Modify/adapt the code and run
+8)	Paste the root folder on "FFPATH" variable on the "userData.py"
+9)	Modify/adapt the "userData.py" parameters and run
 
 10)	After each run check the jobs that the bot didn’t apply automatically, apply them manually by saving your preferences 
 11)	Next time the bot will apply more jobs based on your saved preferences on Linkedin. 
